@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CaixaFácil — Cadastro</title>
+  
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#9aa4b2;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+    body{margin:0;background:linear-gradient(180deg,#071025 0%,#071726 100%);color:#e6eef6;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .card{background:var(--card);border-radius:12px;padding:24px;box-shadow:0 6px 18px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03);width:100%;max-width:420px}
+    .brand{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:14px}
+    .logo{width:46px;height:46px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#4f46e5);display:flex;align-items:center;justify-content:center;font-weight:700}
+    h1{font-size:1.1rem;margin:0}
+    .subtitle{color:var(--muted);font-size:.9rem;text-align:center;margin-bottom:14px}
+    form{display:flex;flex-direction:column;gap:10px}
+    input,button{background:var(--glass);border:1px solid rgba(255,255,255,0.06);padding:10px;border-radius:8px;color:#e6eef6}
+    button{background:var(--accent);border:none;cursor:pointer}
+    .muted{color:var(--muted);font-size:.85rem;text-align:center;margin-top:6px}
+    a{color:#c4b5fd;text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <div class="logo">CF</div><h1>CaixaFácil</h1>
+    </div>
+    <div class="subtitle">Crie sua conta para começar</div>
+    <form id="regForm">
+      <input id="name" placeholder="Seu nome">
+      <input id="email" type="email" placeholder="Seu e-mail" required>
+      <input id="password" type="password" placeholder="Crie uma senha" required>
+      <button type="submit">Cadastrar</button>
+    </form>
+    <div class="muted">Já tem conta? <a href="login.html">Entrar</a></div>
+  </div>
+
+  <!-- Mercado Pago SDK -->
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+
+  <script>
+  const params = new URLSearchParams(location.search);
+  if(params.get('email')) document.getElementById('email').value = params.get('email');
+
+  document.getElementById('regForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    // 1️⃣ Cadastro do usuário
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name, email, password }),
+      credentials: 'include'
+    });
+
+    if(res.status === 409) return alert('E-mail já cadastrado. Faça login.');
+    if(!res.ok) return alert('Erro no cadastro');
+
+    // 2️⃣ Redirecionar para página de pagamento
+    location.href = "payment.html";
+  };
+</script>
+
+</body>
+</html>

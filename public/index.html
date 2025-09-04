@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CaixaFácil — Dashboard</title>
+<style>
+:root {
+  --bg:#0f1724;
+  --card:#0b1220;
+  --accent:#7c3aed;
+  --muted:#9aa4b2;
+  --glass:rgba(255,255,255,0.03);
+}
+
+* {
+  box-sizing:border-box;
+  font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+body {
+  margin:0;
+  background:linear-gradient(180deg,#071025 0%,#071726 100%);
+  color:#e6eef6;
+  min-height:100vh;
+}
+
+.wrap {
+  max-width:1100px;
+  margin:28px auto;
+  padding:20px;
+}
+
+header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.brand {
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+/* ✅ Logo somente com imagem */
+.logo {
+  width:46px;
+  height:46px;
+  border-radius:8px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.logo img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:8px;
+}
+
+h1 { font-size:1.05rem;margin:0; }
+.subtitle { color:var(--muted);font-size:.85rem; }
+
+.grid {
+  display:grid;
+  grid-template-columns:1fr 360px;
+  gap:18px;
+}
+@media(max-width:880px){
+  .grid{grid-template-columns:1fr}
+  .sidebar{order:2}
+}
+
+.card {
+  background:var(--card);
+  border-radius:12px;
+  padding:16px;
+  box-shadow:0 6px 18px rgba(2,6,23,0.6);
+  border:1px solid rgba(255,255,255,0.03);
+}
+
+.balance {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.balance .amount { font-size:1.9rem;font-weight:700; }
+.small { font-size:.85rem;color:var(--muted); }
+
+form { display:flex;flex-direction:column;gap:10px; }
+input,select,button,textarea {
+  background:var(--glass);
+  border:1px solid rgba(255,255,255,0.04);
+  padding:10px;
+  border-radius:8px;
+  color:inherit;
+  width:100%;
+}
+
+.row { display:flex;gap:8px;flex-wrap:wrap; }
+.row > * { flex:1 1 0; }
+
+.btn {
+  background:var(--accent);
+  border:none;
+  padding:10px 12px;
+  border-radius:8px;
+  color:white;
+  cursor:pointer;
+  width:100%;
+}
+.btn.secondary {
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.06);
+}
+@media(min-width:481px){ .btn{width:auto} }
+
+select#q_cat {
+  background:#0b1220;
+  color:#e6eef6;
+  border:1px solid rgba(255,255,255,0.06);
+  padding-right:34px;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+}
+select#q_cat option { background:#0b1220;color:#e6eef6 }
+.select-wrap{position:relative}
+.select-wrap::after{
+  content:'';
+  position:absolute;
+  right:12px;top:50%;
+  transform:translateY(-50%);
+  width:0;height:0;
+  border-left:6px solid transparent;
+  border-right:6px solid transparent;
+  border-top:7px solid var(--muted);
+  pointer-events:none;
+}
+
+.transactions { margin-top:12px;overflow:auto }
+table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:.92rem;
+  min-width:480px;
+}
+th,td {
+  padding:8px 10px;
+  text-align:left;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+}
+
+.tag {
+  display:inline-block;
+  padding:6px 8px;
+  border-radius:999px;
+  font-size:.78rem;
+}
+.income { background:rgba(16,185,129,0.12);color:#9ef0c9 }
+.expense { background:rgba(239,68,68,0.08);color:#ffb3b3 }
+.boleto { background:rgba(59,130,246,0.08);color:#9ec8ff }
+
+.meta { display:flex;gap:8px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:8px }
+.actions { display:flex;gap:8px;align-items:center;flex-wrap:wrap }
+.import { display:flex;gap:8px;align-items:center;flex-wrap:wrap }
+.center { display:flex;align-items:center;justify-content:center }
+
+select, option { background:#0f1724; color:#f5f5f5; }
+select:focus { outline:2px solid var(--accent); }
+
+#boletoWrap {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:var(--glass);
+  border:1px solid rgba(255,255,255,0.08);
+  padding:10px;
+  border-radius:8px;
+}
+#boletoWrap label {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:.9rem;
+  color:#e6eef6;
+  cursor:pointer;
+  margin:0;
+}
+#boletoWrap input[type="checkbox"] {
+  width:18px;height:18px;
+  accent-color:var(--accent);
+  cursor:pointer;
+}
+
+/* 📱 Ajustes Mobile */
+@media(max-width:600px){
+  header{flex-direction:column;align-items:flex-start}
+  .actions{width:100%;justify-content:space-between}
+  .actions .btn{flex:1}
+  .balance{flex-direction:column;align-items:flex-start;text-align:left}
+  .balance > div:last-child{text-align:left;min-width:auto;margin-top:8px}
+  .card{padding:12px}
+  table{font-size:.8rem}
+  th,td{padding:6px 8px}
+}
+/* 📱 Extras para telas muito pequenas */
+@media(max-width:480px){
+  .wrap{padding:12px}
+  h1{font-size:.95rem}
+  .subtitle{font-size:.75rem}
+  .balance .amount{font-size:1.4rem}
+  table{min-width:100%;font-size:.75rem}
+  .tag{font-size:.7rem;padding:4px 6px}
+  .btn{font-size:.85rem;padding:8px}
+}
+</style>
+
+
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+  <div class="logo">
+    <img src="ChatGPT Image 3 de set. de 2025, 11_33_391.png" alt="CaixaFácil">
+  </div>
+  <div>
+    <h1>CaixaFácil</h1>
+    <div class="subtitle">Painel rápido de controle financeiro</div>
+  </div>
+</div>
+
+      <div class="actions">
+        <div class="meta">Saldo atualizado em <strong id="lastUpdate">—</strong></div>
+        <button class="btn" id="exportBtn">Exportar CSV</button>
+        <button class="btn secondary" id="logoutBtn">Sair</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <main>
+        <div class="card">
+          <div class="balance">
+            <div>
+              <div class="small">Saldo disponível</div>
+              <div class="amount" id="balance">R$ 0,00</div>
+              <div class="meta"><div>Receitas 30d: <strong id="rev30">R$ 0,00</strong></div><div>Despesas 30d: <strong id="exp30">R$ 0,00</strong></div></div>
+            </div>
+            <div style="min-width:160px;text-align:right">
+              <div class="small">Projeção 30 dias</div>
+              <div id="proj" style="font-weight:700">R$ 0,00</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+            <strong>Lançamentos recentes</strong>
+            <div class="small">Máx 100</div>
+          </div>
+
+          <div class="transactions">
+            <table id="txTable">
+              <thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Valor</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+
+      <aside class="sidebar">
+        <div class="card">
+          <strong>Adicionar lançamento</strong>
+          <form id="quickForm">
+            <div class="row">
+              <input type="date" id="q_date" required>
+              <select id="q_type">
+                <option value="income">Receita</option>
+                <option value="expense">Despesa</option>
+              </select>
+            </div>
+            <div class="row" id="boletoWrap" style="display:none">
+              <label for="isBoleto">
+                <input type="checkbox" id="isBoleto"> É boleto?
+              </label>
+            </div>
+            <input id="q_desc" placeholder="Descrição" required>
+            <div class="row">
+              <input id="q_amount" type="number" step="0.01" placeholder="Valor (ex: 1200.00)" required>
+              <div class="select-wrap">
+                <select id="q_cat" required>
+                  <option value="">Categoria</option>
+                  <option value="venda">Venda</option>
+                  <option value="servico">Serviço</option>
+                  <option value="fornecedor">Fornecedor</option>
+                  <option value="salario">Salário</option>
+                  <option value="outros">Outros</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn" type="submit">Adicionar</button>
+              <button class="btn secondary" type="button" id="clearBtn">Limpar</button>
+            </div>
+            <div class="row" style="margin-top:8px">
+              <!-- Corrigido o id -->
+              <button class="btn secondary" type="button" id="gotoDashBoard">Abrir dashboard</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <strong>Importar extrato (CSV)</strong>
+          <div style="margin-top:8px" class="import">
+            <input type="file" id="csvFile" accept=".csv"> 
+            <button class="btn secondary" id="importBtn">Importar</button>
+          </div>
+          <div class="meta">Formato: data,descritivo,valor (negativo despesa)</div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <strong>Boletos pendentes</strong>
+          <div id="boletoList" style="margin-top:8px"></div>
+        </div>
+
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    // Redirect to login if not authenticated or not subscribed
+    (async () => {
+      const r = await fetch('/api/me', { credentials:'include' });
+      if (r.status === 401) return location.href = 'login.html';
+      const me = await r.json();
+      if (!me.subscription_active) return location.href = 'payment.html';
+    })();
+
+    const API = "/api/tx";
+    const format = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+
+    async function load(){
+      const res = await fetch(API, { credentials:'include' });
+      if (res.status === 401) return location.href='login.html';
+      if (res.status === 402) return location.href='payment.html';
+      return await res.json();
+    }
+    async function saveTx(tx){
+      const res = await fetch(API, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        credentials:'include',
+        body:JSON.stringify(tx)
+      });
+      if (res.status===401) return location.href='login.html';
+      if (res.status===402) return location.href='payment.html';
+    }
+    async function removeTx(id){
+      const res = await fetch(`${API}/${id}`, { method:"DELETE", credentials:'include' });
+      if (res.status===401) return location.href='login.html';
+      if (res.status===402) return location.href='payment.html';
+    }
+
+    async function render(){
+      const txs = (await load()).sort((a,b)=> new Date(b.date)-new Date(a.date));
+      const tbody = document.querySelector('#txTable tbody'); tbody.innerHTML='';
+      let bal=0,rev30=0,exp30=0;
+      const now=new Date(); document.getElementById('boletoList').innerHTML='';
+
+      txs.slice(0,100).forEach(t=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${t.date}</td><td>${escapeHtml(t.desc)}</td><td><span class="tag ${t.type}">${t.type}</span></td><td>${format(Number(t.amount))}</td><td><button data-id="${t.id}" class="btn secondary">Pagar / Remover</button></td>`;
+        tbody.appendChild(tr);
+        bal+=Number(t.amount);
+        const d=new Date(t.date), days=(d-now)/(1000*60*60*24);
+        if(days>=-30&&days<=0){ if(t.amount>0) rev30+=Number(t.amount); else exp30+=Math.abs(Number(t.amount)); }
+        if(t.type==='boleto' && (!t.paid)) addBoletoCard(t);
+      });
+
+      document.getElementById('balance').textContent=format(bal);
+      document.getElementById('rev30').textContent=format(rev30);
+      document.getElementById('exp30').textContent=format(exp30);
+      document.getElementById('proj').textContent=format(bal+(rev30-exp30));
+      document.getElementById('lastUpdate').textContent=new Date().toLocaleString();
+      attachTableButtons();
+    }
+
+    function attachTableButtons(){
+      document.querySelectorAll('#txTable button').forEach(btn=>{
+        btn.onclick=async ()=>{
+          await removeTx(btn.dataset.id);
+          render();
+        };
+      });
+    }
+
+    function addBoletoCard(t){
+      const node=document.createElement('div');
+      node.style.padding='8px'; node.style.borderBottom='1px solid rgba(255,255,255,0.03)';
+      node.innerHTML=`<div style="display:flex;justify-content:space-between;flex-wrap:wrap"><div><div style='font-weight:600'>${escapeHtml(t.desc)}</div><div class='small'>Venc ${t.date} • ${format(Number(t.amount))}</div></div><div><button class='btn' data-pay='${t.id}'>Marca pago</button></div></div>`;
+      document.getElementById('boletoList').appendChild(node);
+      node.querySelector('button').onclick=async ()=>{
+        t.paid=true;
+        await saveTx(t);
+        render();
+      };
+    }
+
+    function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+    // Mostrar checkbox se for despesa
+    document.getElementById('q_type').addEventListener('change',()=>{
+      document.getElementById('boletoWrap').style.display=
+        (document.getElementById('q_type').value==='expense')?'flex':'none';
+    });
+
+    document.getElementById('quickForm').onsubmit=async e=>{
+      e.preventDefault();
+      const date=document.getElementById('q_date').value||new Date().toISOString().slice(0,10);
+      let type=document.getElementById('q_type').value;
+      if(type==='expense' && document.getElementById('isBoleto').checked){ type='boleto'; }
+      let amount=Number(document.getElementById('q_amount').value||0);
+      if(type==='expense'||type==='boleto') amount=-Math.abs(amount);
+      const tx={
+        id:crypto.randomUUID(),
+        date,
+        type,
+        desc:document.getElementById('q_desc').value,
+        amount,
+        cat:document.getElementById('q_cat').value||'',
+        paid:type==='boleto'?false:true
+      };
+      await saveTx(tx);
+      render();
+      e.target.reset();
+      document.getElementById('boletoWrap').style.display='none';
+    };
+
+    document.getElementById('clearBtn').onclick=()=>document.getElementById('quickForm').reset();
+
+    // Corrigido o id aqui
+    document.getElementById('gotoDashBoard').onclick=()=>{window.location.href='dashboard.html'};
+
+    document.getElementById('importBtn').onclick=()=>{
+      const file=document.getElementById('csvFile').files[0]; if(!file)return alert('Escolha um arquivo .csv');
+      const reader=new FileReader(); reader.onload=async ()=>{
+        const lines=reader.result.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+        for(const line of lines){
+          const cols=line.split(',');
+          if(cols.length<3) continue;
+          const date=cols[0],desc=cols[1],amount=Number(cols[2].replace(/\s|\./g,'').replace(',','.'));
+          const tx={id:crypto.randomUUID(),date,desc,type:amount>=0?'income':'expense',amount,cat:'import',paid:true};
+          await saveTx(tx);
+        }
+        render();
+      };
+      reader.readAsText(file,'ISO-8859-1');
+    };
+
+    document.getElementById('exportBtn').onclick=async ()=>{
+      const txs=await load();
+      const csv=['date,desc,amount'].concat(txs.map(t=>`${t.date},"${t.desc.replace(/"/g,'""')}",${t.amount}`)).join('\n');
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='txs-caixafacil.csv'; a.click(); URL.revokeObjectURL(url);
+    };
+
+    document.getElementById('logoutBtn').onclick=async ()=>{
+      await fetch('/api/auth/logout', { method:'POST', credentials:'include' });
+      location.href='login.html';
+    };
+
+    render();
+  </script>
+</body>
+</html>
