@@ -5,50 +5,39 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>CaixaFácil — Pagamento</title>
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#9aa4b2}
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#9aa4b2;--glass:rgba(255,255,255,0.03)}
     *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
     body{margin:0;background:linear-gradient(180deg,#071025 0%,#071726 100%);color:#e6eef6;min-height:100vh;display:flex;align-items:center;justify-content:center}
     .card{background:var(--card);border-radius:12px;padding:24px;box-shadow:0 6px 18px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03);width:100%;max-width:420px;text-align:center}
-    .logo{width:46px;height:46px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#4f46e5);display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 14px}
-    h1{font-size:1.2rem;margin-bottom:10px}
+    h1{font-size:1.2rem;margin-bottom:14px}
     .subtitle{color:var(--muted);font-size:.9rem;margin-bottom:20px}
-    #wallet_container button{width:100%;padding:12px;border-radius:8px;font-size:1rem;cursor:pointer;background:var(--accent);border:none;color:#fff}
+    button{background:var(--accent);border:none;padding:12px;border-radius:8px;color:#fff;font-weight:600;cursor:pointer;width:100%}
   </style>
-  <script src="https://sdk.mercadopago.com/js/v2"></script>
 </head>
 <body>
   <div class="card">
-    <div class="logo">CF</div>
-    <h1>Complete sua assinatura</h1>
-    <div class="subtitle">Clique no botão abaixo para pagar</div>
-    <div id="wallet_container"></div>
+    <h1>Finalize seu pagamento</h1>
+    <div class="subtitle">Clique no botão abaixo para completar sua assinatura</div>
+    <button id="payBtn">Pagar R$69,90</button>
   </div>
 
 <script>
-async function initMercadoPago() {
-  try {
-    const res = await fetch('/api/create_preference', { method: 'POST' });
+  document.getElementById('payBtn').onclick = async () => {
+    const res = await fetch('/api/checkout', { method: 'POST', credentials: 'include' });
     const data = await res.json();
-    if (!data.preferenceId) return alert('Erro ao criar preferência Mercado Pago: ' + JSON.stringify(data));
 
-    const mp = new MercadoPago("TEST-2686299953693686-090408-77ba7a08f7478d6de1aa8f21f3b179d8-2669672572", { locale: "pt-BR" });
+    if (data.devActivated) {
+      alert('Pagamento simulado (modo dev) ativado!');
+      window.location.href = '/dashboard.html';
+      return;
+    }
 
-    mp.checkout({
-      preference: { id: data.preferenceId },
-      autoOpen: false,
-      render: {
-        container: "#wallet_container",
-        label: "Pagar com Mercado Pago"
-      }
-    });
-
-  } catch (e) {
-    console.error("Erro ao inicializar Mercado Pago", e);
-    alert("Erro ao inicializar Mercado Pago: " + e.message);
-  }
-}
-
-initMercadoPago();
+    if (data.url) {
+      window.location.href = data.url; // redireciona para Stripe
+    } else {
+      alert('Erro ao iniciar o checkout. Tente novamente.');
+    }
+  };
 </script>
 </body>
 </html>

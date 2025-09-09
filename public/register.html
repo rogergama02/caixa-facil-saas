@@ -36,10 +36,7 @@
     <div class="muted">Já tem conta? <a href="login.html">Entrar</a></div>
   </div>
 
-  <!-- Mercado Pago SDK -->
-  <script src="https://sdk.mercadopago.com/js/v2"></script>
-
-  <script>
+<script>
   const params = new URLSearchParams(location.search);
   if(params.get('email')) document.getElementById('email').value = params.get('email');
 
@@ -49,7 +46,7 @@
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
 
-    // 1️⃣ Cadastro do usuário
+    // Cadastro do usuário
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -60,7 +57,7 @@
     if(res.status === 409) return alert('E-mail já cadastrado. Faça login.');
     if(!res.ok) return alert('Erro no cadastro');
 
-    // 2️⃣ Redirecionar para página de pagamento
+    // Redirecionar para página de pagamento
     location.href = "payment.html";
   };
 </script>

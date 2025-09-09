@@ -1,4 +1,4 @@
-// server-render-sqlite3.js - CaixaFácil SaaS para Render usando sqlite3
+// server-render-sqlite3.js - CaixaFácil SaaS com Stripe + sqlite3
 require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
@@ -7,12 +7,17 @@ const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
-const MP_PUBLIC_KEY = process.env.MP_PUBLIC_KEY;
+// 🔑 Stripe
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
+const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID || "";
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
 const PORT = process.env.PORT || 3000;
+
+let stripe = null;
+if (STRIPE_SECRET_KEY) {
+  stripe = require('stripe')(STRIPE_SECRET_KEY);
+}
 
 const app = express();
 
@@ -164,8 +169,34 @@ app.delete('/api/tx/:id', authRequired, subscriptionRequired, (req, res) => {
   res.json({ ok: true });
 });
 
-// ---- Mercado Pago ----
-// Mantém igual, sem alterações necessárias
+// ---- Stripe Checkout ----
+app.post('/api/checkout', authRequired, async (req, res) => {
+  try {
+    if (!stripe || !STRIPE_PRICE_ID) {
+      // fallback dev
+      db.run('UPDATE users SET subscription_active = 1 WHERE id = ?', [req.user.id]);
+      return res.json({ devActivated: true });
+    }
+
+    db.get('SELECT email FROM users WHERE id = ?', [req.user.id], async (err, user) => {
+      if (err || !user) return res.status(404).json({ error: 'user_not_found' });
+
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
+        customer_email: user.email,
+        success_url: `${req.protocol}://${req.get('host')}/payment-success.html`,
+        cancel_url: `${req.protocol}://${req.get('host')}/payment-cancel.html`,
+        metadata: { user_id: String(req.user.id) }
+      });
+
+      res.json({ url: session.url });
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'checkout_error' });
+  }
+});
 
 // ---- Static Frontend ----
 app.use(express.static(path.join(__dirname, 'public')));
@@ -174,6 +205,6 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
 
 // ---- Start server ----
 app.listen(PORT, () => {
-  console.log(`CaixaFácil server running on port ${PORT}`);
-  if (!MP_ACCESS_TOKEN) console.log('⚠️ Mercado Pago não configurado. /api/create_preference não vai funcionar.');
+  console.log(`🚀 CaixaFácil server running on http://localhost:${PORT}`);
+  if (!STRIPE_SECRET_KEY) console.log('⚠️ Stripe não configurado. Usando fallback (auto-ativação).');
 });
